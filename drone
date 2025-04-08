@@ -4,12 +4,12 @@ from time import sleep
 drone = tello.Tello()
 
 drone.connect()
+sleep(1)
 drone.takeoff()
 sleep(1)
+drone.move_up(155)
 sleep(2)
-drone.flip_left
-sleep(2)
-drone.flip_right
+drone.move_forward(352.5)
 sleep(2)
 drone.land()
 sleep(2)
