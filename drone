@@ -1,0 +1,16 @@
+from djitellopy import tello
+from time import sleep
+
+drone = tello.Tello()
+
+drone.connect()
+drone.takeoff()
+sleep(1)
+drone.move_up(70)
+sleep(1)
+drone.flip("l")
+sleep(1)
+drone.flip("r")
+sleep(1)
+drone.land()
+drone.end()
