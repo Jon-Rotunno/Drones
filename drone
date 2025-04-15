@@ -1,41 +1,46 @@
-from djitellopy import Tello
 import cv2
+from djitellopy import tello
 from time import sleep
+drone = tello.Tello()
+import keyboard
+#connects and turn on camera
+drone.connect()
+drone.takeoff()
+drone.streamon()
 
-# Initialize the drone and connect
-me = Tello()
-me.connect()
+cv2.namedWindow("Tello Camera",cv2.WINDOW_NORMAL)
 
-# Print battery level
-print(f"Battery: {me.get_battery()}%")
-
-# Start video stream
-me.streamon()
-frame_read = me.get_frame_read()
-
-# Take off
-me.takeoff()
-sleep(2)
-
-# Move forward 100 cm
-me.move_forward(100)
-sleep(2)
-
-# Show camera feed for a few seconds
-for _ in range(100):  # About 3–4 seconds at 30 FPS
-    frame = frame_read.frame
-    img = cv2.resize(frame, (640, 480))
-    cv2.imshow("Tello Camera", img)
-    
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+#controls
+running = True
+while True:
+    frame= drone.get_frame_read().frame
+    cv2.imshow("drone cotrol",frame)
+    cv2.waitKey(1)
+    key = cv2.waitKey(1) & 0xff
+    if keyboard.is_pressed("l"):
         break
-    sleep(0.03)  # ~30 FPS
+    elif keyboard.is_pressed("w"):
+        drone.move_forward(30)
+    elif keyboard.is_pressed("s"):
+        drone.move_back(30)
+    elif keyboard.is_pressed("a"):
+        drone.move_left(30)
+    elif  keyboard.is_pressed("d"):
+        drone.move_right(30)
+    elif  keyboard.is_pressed("e"):
+        drone.rotate_clockwise(30)
+    elif  keyboard.is_pressed("q"):
+        drone.rotate_counter_clockwise(30)
+    elif  keyboard.is_pressed("r"):
+        drone.move_up(30)
+    elif keyboard.is_pressed("f"):
+        drone.move_down(30)
+    elif  keyboard.is_pressed("c"):
+        drone.flip("b")
+        sleep(0.1)
+    
+drone.land()
 
-# Land
-me.land()
-sleep(2)
-
-# Clean up
-me.streamoff()
 cv2.destroyAllWindows()
-me.end()
+drone.end()
+
