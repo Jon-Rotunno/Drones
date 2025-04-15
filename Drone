@@ -1,39 +1,41 @@
-from djitellopy import tello
+from djitellopy import Tello
+import cv2
 from time import sleep
 
-drone = tello.Tello()
+# Initialize the drone and connect
+me = Tello()
+me.connect()
 
-drone.connect()
+# Print battery level
+print(f"Battery: {me.get_battery()}%")
 
-keepRecording = true
-drone.streamon() 
-frame_read = tello.get_frame_read()
-def videoRecorder():
-    #create a VideoWrite object, recoring to ./video.avi
-    height, width, _ = frame_read.frame.shape
-    video = cv2.VideoWriter('video.avi', cv2.VideoWriter_fourcc(*'XVID'), 30, (width, height))
+# Start video stream
+me.streamon()
+frame_read = me.get_frame_read()
+
+# Take off
+me.takeoff()
+sleep(2)
+
+# Move forward 100 cm
+me.move_forward(100)
+sleep(2)
+
+# Show camera feed for a few seconds
+for _ in range(100):  # About 3–4 seconds at 30 FPS
+    frame = frame_read.frame
+    img = cv2.resize(frame, (640, 480))
+    cv2.imshow("Tello Camera", img)
     
-    while keepRecording:
-        video.write(frame_read.frame)
-        time.sleep(1 / 30)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+    sleep(0.03)  # ~30 FPS
 
-    video.release()
-    recorder = Thread(target=videoRecorder)
-recorder.start()
-
-drone.takeoff()
-drone.move_up(100)
-drone.rotate_counter_clockwise(360)
-drone.land()
-
-keepRecording = False
-recorder.join()
-
-sleep(1)
-drone.takeoff()
-sleep(1)
-drone.move_up(int(155))
+# Land
+me.land()
 sleep(2)
-drone.move_forward(int(352.5))
-sleep(2)
-drone.land()
+
+# Clean up
+me.streamoff()
+cv2.destroyAllWindows()
+me.end()
