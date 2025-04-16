@@ -15,8 +15,8 @@ running = True
 while True:
     frame= drone.get_frame_read().frame
     cv2.imshow("drone cotrol",frame)
-    cv2.waitKey(1)
-    key = cv2.waitKey(1) & 0xff
+    cv2.waitKey(.1)
+    key = cv2.waitKey(.1) & 0xff
     if keyboard.is_pressed("l"):
         break
     elif keyboard.is_pressed("w"):
