@@ -1,7 +1,11 @@
+import time
 import cv2
 from djitellopy import Tello
 from time import sleep
 import keyboard
+import numpy as np
+import webcolors
+
 # Initialize and connect drone
 drone = Tello()
 drone.connect()
@@ -14,7 +18,7 @@ drone.streamon()
 cv2.namedWindow("Tello Camera", cv2.WINDOW_NORMAL)
 
 # Takeoff
-drone.takeoff()
+#drone.takeoff()
 sleep(2)
 
 # Main loop
@@ -47,13 +51,55 @@ try:
             drone.flip("b")
         elif keyboard.is_pressed("l"):
             print("Landing...")
+            drone.land 
             break
 
         sleep(0.1)
-
 except Exception as e:
     print("Error:", e)
+hoop_sequence = ["purple", "orange", "yellow", "orange", "blue", "red", "purple", "green", "red", "yellow", "blue", "green"]
+current = 0
+def detect_color(frame, target_color):
+    # Convert to HSV
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
+    # Define HSV color ranges
+    color_ranges = {
+        "red": [(0, 120, 70), (10, 255, 255)],
+        "orange": [(10, 100, 100), (25, 255, 255)],
+        "yellow": [(25, 100, 100), (35, 255, 255)],
+        "green": [(40, 70, 70), (80, 255, 255)],
+        "blue": [(90, 60, 60), (130, 255, 255)],
+        "purple": [(130, 100, 100), (160, 255, 255)],
+    }
+
+    if target_color not in color_ranges:
+        return None
+
+    lower, upper = color_ranges[target_color]
+    mask = cv2.inRange(hsv, np.array(lower), np.array(upper))
+
+    # Check if enough color is detected
+    detected_area = cv2.countNonZero(mask)
+    if detected_area > 800:  
+        return target_color
+    else:
+        return None
+while current < len(hoop_sequence):
+    frame = drone.get_frame_read().frame
+    frame = cv2.resize(frame, (640, 480))
+    target = hoop_sequence[current]
+    detected = detect_color(frame, target_color=target)
+    
+    if detected == target:
+        print(f" Passed through {target} hoop")
+        current += 1
+        time.sleep(2)
+
+    cv2.imshow("Drone Feed", frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+    
 # LAND AND SHUT DOWN
 drone.land()
 drone.streamoff()
