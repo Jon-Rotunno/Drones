@@ -4,7 +4,6 @@ from djitellopy import Tello
 from time import sleep
 import keyboard
 import numpy as np
-import webcolors
 
 # Initialize and connect drone
 drone = Tello()
@@ -13,24 +12,20 @@ print("Battery:", drone.get_battery())
 
 # Start camera stream
 drone.streamon()
-
-# Optional: show the window larger
 cv2.namedWindow("Tello Camera", cv2.WINDOW_NORMAL)
 
-# Takeoff
-#drone.takeoff()
+# Takeoff if desired
+# drone.takeoff()
 sleep(2)
 
-# Main loop
+#  Manual Control Loop
 try:
     while True:
-        # Show live camera
         frame = drone.get_frame_read().frame
         img = cv2.resize(frame, (640, 480))
         cv2.imshow("Tello Camera", img)
         cv2.waitKey(1)
 
-        # Controls
         if keyboard.is_pressed("w"):
             drone.move_forward(30)
         elif keyboard.is_pressed("s"):
@@ -51,19 +46,19 @@ try:
             drone.flip("b")
         elif keyboard.is_pressed("l"):
             print("Landing...")
-            drone.land 
+            drone.land()
             break
 
         sleep(0.1)
 except Exception as e:
     print("Error:", e)
+
+# Hoop Color Detection 
 hoop_sequence = ["purple", "orange", "yellow", "orange", "blue", "red", "purple", "green", "red", "yellow", "blue", "green"]
 current = 0
-def detect_color(frame, target_color):
-    # Convert to HSV
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Define HSV color ranges
+def detect_color(frame, target_color):
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     color_ranges = {
         "red": [(0, 120, 70), (10, 255, 255)],
         "orange": [(10, 100, 100), (25, 255, 255)],
@@ -78,29 +73,26 @@ def detect_color(frame, target_color):
 
     lower, upper = color_ranges[target_color]
     mask = cv2.inRange(hsv, np.array(lower), np.array(upper))
-
-    # Check if enough color is detected
     detected_area = cv2.countNonZero(mask)
-    if detected_area > 800:  
-        return target_color
-    else:
-        return None
+    return target_color if detected_area > 800 else None
+
+# Loop through hoop sequence
 while current < len(hoop_sequence):
     frame = drone.get_frame_read().frame
     frame = cv2.resize(frame, (640, 480))
     target = hoop_sequence[current]
-    detected = detect_color(frame, target_color=target)
-    
+    detected = detect_color(frame, target)
+
     if detected == target:
         print(f" Passed through {target} hoop")
         current += 1
         time.sleep(2)
 
-    cv2.imshow("Drone Feed", frame)
+    cv2.imshow("Tello Camera", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-    
-# LAND AND SHUT DOWN
+
+# === Land and Clean Up ===
 drone.land()
 drone.streamoff()
 cv2.destroyAllWindows()
